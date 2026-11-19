@@ -23,6 +23,7 @@ jobs:
       - name: Check stock
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
         run: node check.ts ${{ inputs.test && '--test' || '' }}
       - name: Save state
         run: |
