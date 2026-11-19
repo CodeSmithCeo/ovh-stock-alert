@@ -1,8 +1,6 @@
 // Checks server stock and pushes a phone alert (ntfy) when it changes:
 //   OVH VPS-2 (Linux) in EU datacentres: public API, no login.
-//   Hetzner Cloud CX23 / CAX11 / CX33 in EU locations: Hetzner Cloud API, read-only token in the HCLOUD_TOKEN
-//   secret (skipped with a log line while the secret is missing). The website can't tell: its "currently
-//   unavailable" note is on every plan's button, available or not.
+//   Hetzner Cloud CX23 / CAX11 / CX33: the public plan page (its "not available" label), no login.
 // Runs on GitHub Actions. Node 24 runs .ts directly (type stripping), no dependencies.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
@@ -51,34 +49,32 @@ const ovh: Source = {
 };
 
 // --- Hetzner Cloud CX23 / CAX11 / CX33 ---------------------------------------------------------------
+// The plan page marks a sold-out plan with a "not available" label (class product-highlight-label-NotAvailable)
+// in its row, and greys its Create button. Per plan, not per location. No login needed.
 const HZ_TYPES = ["cx23", "cax11", "cx33"]; // 2/4 GB, 2/4 GB ARM, 4/8 GB
-const HZ_EU: Record<string, string> = { fsn1: "Falkenstein", nbg1: "Nuremberg", hel1: "Helsinki" };
+const HZ_PAGE = "https://www.hetzner.com/cloud/cost-optimized/";
 const hetzner: Source = {
   key: "hetzner",
   name: "Hetzner",
-  orderUrl: "https://console.hetzner.com/",
+  orderUrl: HZ_PAGE,
   hint: "CX23 is enough for the dashboard alone, hourly billing.",
   async inStock() {
-    const token = process.env.HCLOUD_TOKEN;
-    if (!token) { console.log("hetzner: HCLOUD_TOKEN secret missing, skipped"); return undefined; }
-    const get = async <T>(path: string): Promise<T> => {
-      const res = await fetch(`https://api.hetzner.cloud/v1/${path}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) throw new Error(`Hetzner API ${path} ${res.status}`);
-      return (await res.json()) as T;
-    };
-    const { server_types } = await get<{ server_types: { id: number; name: string }[] }>("server_types?per_page=50");
-    const nameOf = new Map(server_types.map((t) => [t.id, t.name]));
-    const { datacenters } = await get<{ datacenters: { location: { name: string }; server_types: { available: number[] } }[] }>("datacenters");
-    const out = new Set<string>();
-    for (const dc of datacenters) {
-      const city = HZ_EU[dc.location.name];
-      if (!city) continue;
-      for (const id of dc.server_types.available) {
-        const n = nameOf.get(id);
-        if (n && HZ_TYPES.includes(n)) out.add(`${n.toUpperCase()} ${city}`);
-      }
+    const res = await fetch(HZ_PAGE, { headers: { "User-Agent": "Mozilla/5.0 (stock-alert)" } });
+    if (!res.ok) throw new Error(`Hetzner page ${res.status}`);
+    const html = await res.text();
+    // Each plan row ends with its Create button (configbtn ... type=<plan>); the label sits earlier in the row.
+    const rows = html.split(/class="[^"]*configbtn[^"]*"/);
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (let i = 1; i < rows.length; i++) {
+      const type = rows[i].match(/type=(\w+)/)?.[1];
+      if (!type || seen.has(type)) continue;
+      seen.add(type);
+      if (HZ_TYPES.includes(type) && !rows[i - 1].slice(-20000).includes("product-highlight-label-NotAvailable")) out.push(type.toUpperCase());
     }
-    return [...out];
+    const missing = HZ_TYPES.filter((t) => !seen.has(t));
+    if (missing.length) throw new Error(`Hetzner page changed, plans not found: ${missing.join(", ")}`);
+    return out;
   },
 };
 

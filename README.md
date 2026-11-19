@@ -1,7 +1,7 @@
 # ovh-stock-alert
 
 Hourly GitHub Actions check of OVH **VPS-2** (Linux) stock in EU datacentres (Frankfurt, Warsaw, Strasbourg, Gravelines, Roubaix, Milan).
-Also Hetzner Cloud **CX23 / CAX11 / CX33** in Falkenstein, Nuremberg and Helsinki, via the Hetzner Cloud API with a read-only token in the `HCLOUD_TOKEN` secret (skipped while the secret is missing). The Hetzner website can't be used: its "currently unavailable" note sits on every plan's button.
+Also Hetzner Cloud **CX23 / CAX11 / CX33** (Germany/Finland): the public page https://www.hetzner.com/cloud/cost-optimized/ marks a sold-out plan "not available". Per plan, not per location.
 
 When stock appears, a push notification goes to the ntfy topic in the `NTFY_TOPIC` secret (urgent, tap opens the order page). When it sells out again, a low-priority note.
 
