@@ -1,7 +1,7 @@
 name: check
 on:
   schedule:
-    - cron: "23 * * * *" # every hour at :23 (UTC)
+    - cron: "7,27,47 * * * *" # every 20 min (UTC). GitHub drops many slots on the free tier, more slots = more runs
   workflow_dispatch:
     inputs:
       test:
