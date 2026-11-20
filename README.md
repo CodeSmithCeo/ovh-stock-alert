@@ -14,7 +14,7 @@ When stock appears, a push notification goes to the ntfy topic in the `NTFY_TOPI
 
 GitHub's free-tier schedule drops most slots (4 runs in 24 h on 19./20.11.), and OVH stock can sell out within hours, so the laptop checks too, every 5 min while it is on.
 
-- Units: `laptop/ovh-stock-alert.service` + `.timer` (systemd user). Set-up commands are at the top of the `.service` file. `WorkingDirectory` must point at the checkout.
+- Units: `laptop/ovh-stock-alert.service` + `.timer` (systemd user). Set-up commands are at the top of the `.service` file. `WorkingDirectory` is the main checkout `~/WORK/ovh-stock-alert` (keep it on main).
 - Topic: `~/.config/ovh-stock-alert/ntfy-topic` (600). State: `~/.local/state/ovh-stock-alert/state.json`, separate from the repo's `state.json`.
 - Both runners push on their own, so a restock can arrive twice (laptop first, GitHub later).
 - Log: `journalctl --user -u ovh-stock-alert -n 20`. Stop: `systemctl --user disable --now ovh-stock-alert.timer`.
