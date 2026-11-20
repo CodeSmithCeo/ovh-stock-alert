@@ -2,16 +2,16 @@
 # Same pushes as the GitHub workflow, own state in ~/.local/state/ovh-stock-alert/state.json.
 # The ntfy topic is read from ~/.config/ovh-stock-alert/ntfy-topic (600, never committed).
 # Set up once (README, "Laptop timer"):
-#   ln -sf <checkout>/laptop/ovh-stock-alert.service ~/.config/systemd/user/ovh-stock-alert.service
-#   ln -sf <checkout>/laptop/ovh-stock-alert.timer   ~/.config/systemd/user/ovh-stock-alert.timer
+#   ln -sf ~/WORK/ovh-stock-alert/laptop/ovh-stock-alert.service ~/.config/systemd/user/ovh-stock-alert.service
+#   ln -sf ~/WORK/ovh-stock-alert/laptop/ovh-stock-alert.timer   ~/.config/systemd/user/ovh-stock-alert.timer
 #   systemctl --user daemon-reload && systemctl --user enable --now ovh-stock-alert.timer
 [Unit]
 Description=ovh-stock-alert: OVH VPS-2 + Hetzner stock check, ntfy push on change
 
 [Service]
 Type=oneshot
-# The symlink target's folder: the checkout this unit lives in.
-WorkingDirectory=%h/WORK/ovh-stock-alert-laptop
+# The main checkout (keep it on main).
+WorkingDirectory=%h/WORK/ovh-stock-alert
 Environment=STATE_FILE=%h/.local/state/ovh-stock-alert/state.json
 ExecStartPre=/bin/mkdir -p %h/.local/state/ovh-stock-alert
 # nvm's node, the same way as power-fetch.service.
