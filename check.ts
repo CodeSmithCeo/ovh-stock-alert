@@ -1,10 +1,11 @@
 // Checks server stock and pushes a phone alert (ntfy) when it changes:
 //   OVH VPS-2 (Linux) in EU datacentres: public API, no login.
 //   Hetzner Cloud CX23 / CAX11 / CX33: the public plan page (its "not available" label), no login.
-// Runs on GitHub Actions. Node 24 runs .ts directly (type stripping), no dependencies.
+// Runs on GitHub Actions and on the laptop (systemd timer, laptop/). Node 24 runs .ts directly (type stripping), no dependencies.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
-const STATE_FILE = "state.json";
+// The laptop keeps its own state outside the repo, so the two runners never fight over state.json.
+const STATE_FILE = process.env.STATE_FILE ?? "state.json";
 type State = Record<string, string[]>; // source -> what was in stock last run
 
 const topic = process.env.NTFY_TOPIC;
